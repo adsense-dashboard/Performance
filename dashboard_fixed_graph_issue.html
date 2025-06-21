@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Ads Manager Dashboard</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- Feather Icons CDN -->
+<script src="https://unpkg.com/feather-icons"></script>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style id="theme-style">
+    :root {
+      --primary: #2b4ef6;
+      --secondary: #21c197;
+      --danger: #df1d3a;
+      --warning: #f2b400;
+      --success: #21c197;
+      --info: #2b4ef6;
+      --muted: #eef2fa;
+      --background: #f6f8fd;
+      --white: #fff;
+      --text: #232e47;
+      --border: #e1e5ee;
+      --radius: 15px;
+      --shadow: 0 2px 16px 0 rgba(43, 78, 246, 0.07);
+      --font: 'Segoe UI', 'Roboto', Arial, sans-serif;
+    }
+    body {
+      font-family: var(--font);
+      background: var(--background);
+      margin: 0;
+      color: var(--text);
+      transition: background 0.2s, color 0.2s;
+    }
+    header {
+      background: linear-gradient(90deg, var(--primary) 65%, var(--secondary));
+      color: #fff;
+      padding: 32px 0 20px 0;
+      text-align: center;
+      font-size: 2em;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      box-shadow: 0 4px 18px rgba(43,78,246,0.09);
+      position: relative;
+    }
+    .theme-toggle {
+      position: absolute;
+      right: 28px;
+      top: 32px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 1.06em;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 2vw 60px 2vw;
+    }
+    .dashboard-widgets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 28px;
+      justify-content: center;
+    }
+    .widget {
+      flex: 1 1 230px;
+      min-width: 210px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      border: 1.5px solid var(--border);
+      transition: border-color .14s, box-shadow .14s;
+      position: relative;
+      overflow: hidden;
+    }
+    .widget:hover {
+      border-color: var(--primary);
+      box-shadow: 0 5px 26px rgba(43,78,246,0.13);
+    }
+    .widget .icon {
+      font-size: 1.7em;
+      margin-bottom: 7px;
+      color: var(--primary);
+      opacity: 0.9;
+    }
+    .widget-title {
+      font-size: 1.02em;
+      margin-bottom: 4px;
+      color: #555;
+      font-weight: 600;
+      letter-spacing: .6px;
+    }
+    .widget-value {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    .widget-change.up { color: var(--success); font-weight: 500; }
+    .widget-change.down { color: var(--danger); font-weight: 500; }
+    .main-grid { display: flex; gap: 28px; flex-wrap: wrap; }
+    .main-left, .main-right { flex: 1 1 420px; min-width: 340px; }
+    .ad-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px 16px 14px 20px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+      border: 1.5px solid var(--border);
+      transition: background 0.2s;
+    }
+    .ad-section-title {
+      font-size: 1.13em;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 13px;
+      letter-spacing: .4px;
+      display: flex; align-items: center; gap: 13px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: transparent;
+      font-size: 1em;
+    }
+    th {
+      text-align: left;
+      padding: 10px 11px;
+      background: #f4f6fc;
+      color: var(--primary);
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+    }
+    td {
+      padding: 10px 11px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+      background: transparent;
+      font-size: 0.99em;
+      transition: background .12s;
+    }
+    tr.edit-row { background: #f4f9ff !important; }
+    tr:hover td { background: #f7fafd; }
+    .ad-preview {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ad-icon {
+      width: 38px; height: 38px; border-radius: 8px;
+      background: #e2e8f7;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3em; margin-right: 2px;
+      color: var(--primary);
+    }
+    .ad-info { display: flex; flex-direction: column; gap: 2.5px; }
+    .ad-badge {
+      display: inline-block;
+      padding: 2px 11px;
+      border-radius: 7px;
+      font-size: 0.97em;
+      color: #fff;
+      font-weight: 500;
+      margin-left: 4px;
+      letter-spacing: .2px;
+    }
+    .ad-badge.active { background: var(--success); }
+    .ad-badge.paused { background: var(--warning); color: #5d4105;}
+    .ad-badge.stopped { background: var(--danger);}
+    .ad-actions button {
+      border: none;
+      border-radius: 4px;
+      font-size: 0.98em;
+      font-weight: 500;
+      margin-right: 7px;
+      margin-bottom: 3px;
+      padding: 5px 13px;
+      cursor: pointer;
+      transition: background 0.13s, color .14s;
+      background: #f3f6fc;
+      color: #232e47;
+    }
+    .btn-details { background: #e9f0fe; color: var(--primary);}
+    .btn-pause { background: #fff4e0; color: var(--warning);}
+    .btn-resume { background: #e2f9f2; color: var(--success);}
+    .btn-remove { background: #ffeaea; color: var(--danger);}
+    .btn-edit { background: #e2e8f7; color: var(--primary);}
+    .btn-edit-table { background: #e7ebf6; color: var(--primary); font-size:0.98em;}
+    .btn-details:hover, .btn-edit:hover, .btn-edit-table:hover { background: #f7fafd; color: #2b4ef6;}
+    .btn-pause:hover { background: #fff0c7; }
+    .btn-resume:hover { background: #d7f1e8; }
+    .btn-remove:hover { background: #ffd6d6; }
+    .pay-table th, .pay-table td { padding: 8px 10px; }
+    .pay-table tr:nth-child(even) { background: #f8fafd; }
+    .refer-box, .notif-box {
+      background: #f6fafd;
+      border-radius: 11px;
+      padding: 17px 16px 11px 16px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 8px 0 rgba(43,78,246,0.04);
+      border: 1px solid #e7ecf8;
+    }
+    .refer-code-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .refer-code {
+      background: #e6ebff;
+      color: var(--primary);
+      font-weight: 700;
+      padding: 3px 13px;
+      border-radius: 7px;
+      font-size: 1.13em;
+      margin-right: 7px;
+    }
+    .notif-title { font-weight: 600; margin-bottom: 7px; color: var(--primary);}
+    .notif-list { font-size: 1em; }
+    .notif-list li span.date { color: #555; font-size: 0.98em; margin-right: 8px;}
+    .pie-section {
+      background: #f6fafd;
+      border-radius: 13px;
+      padding: 18px 18px 10px 18px;
+      margin-bottom: 23px;
+      display: flex; flex-direction: column; align-items: center;
+      box-shadow: 0 1px 8px 0 rgba(43,78,246,0.04);
+      border: 1px solid #e7ecf8;
+    }
+    .legend-list { display: flex; gap: 13px; margin-top: 10px;}
+    .legend-dot {
+      width: 13px; height: 13px; border-radius: 50%; display: inline-block;
+      margin-right: 5px;
+    }
+    .modal-bg {
+      position: fixed; left:0; top:0; width:100vw; height:100vh;
+      background: rgba(43,78,246,0.12);
+      z-index: 200;
+      display: none; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(43,78,246,0.14);
+      padding: 33px 28px 22px 28px;
+      min-width: 280px; max-width: 94vw;
+      width: 370px;
+      position: relative;
+      animation: popIn .18s;
+    }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0.3;} to {transform: scale(1); opacity: 1;} }
+    .close-modal {
+      position: absolute; right: 18px; top: 16px; font-size: 1.35em; cursor: pointer;
+      background: none; border: none; color: #aaa;
+    }
+    .modal-content h2 { margin-top: 0; margin-bottom: 15px; color: var(--primary); font-size: 1.1em;}
+    .modal-row { margin-bottom: 13px; }
+    .modal-row label { font-weight: 500; margin-bottom: 3px; display: block;}
+    .modal-row input, .modal-row select, .modal-row textarea {
+      width: 94%; padding: 7px 8px; border: 1px solid #d7d7e9;
+      border-radius: 7px; font-size: 1em;
+    }
+    .modal-save-btn {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 8px 23px;
+      border-radius: 7px;
+      font-size: 1.08em;
+      font-weight: 600;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+    .modal-save-btn:hover { background: #229f60; }
+    /* Floating + New Ad button */
+    .new-ad-fab {
+      position: fixed;
+      bottom: 32px;
+      right: 36px;
+      z-index: 1000;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 6px 18px rgba(43,78,246,0.20);
+      width: 64px; height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2em;
+      transition: background 0.18s, box-shadow 0.18s;
+      cursor: pointer;
+    }
+    .new-ad-fab:hover {
+      background: #162e6d;
+      box-shadow: 0 8px 26px rgba(43,78,246,0.26);
+    }
+    @media (max-width: 900px) {
+      .main-grid { flex-direction: column; gap: 0px;}
+
+@media (max-width: 600px) {
+  .main-grid {
+    flex-direction: column !important;
+  }
+  .main-left,
+  .main-right {
+    flex-basis: auto !important;
+    width: 100% !important;
+  }
+  /* tighten table text a bit so it fits */
+  .ads-table th,
+  .ads-table td {
+    font-size: 0.85rem !important;
+  }
+}
+
+      .main-left, .main-right { min-width: 0; }
+      .dashboard-widgets { flex-direction: column; gap: 15px;}
+      .new-ad-fab { right: 20px; bottom: 18px;}
+    }
+    /* NIGHT THEME */
+    body.night,
+    body.night #theme-style {
+      --primary: #7aa7fb;
+      --secondary: #23d6c8;
+      --danger: #fd5a5a;
+      --warning: #ffb800;
+      --success: #3ec97c;
+      --info: #4b9cff;
+      --muted: #232e47;
+      --background: #161b23;
+      --white: #232e47;
+      --text: #f3f6fd;
+      --border: #29304a;
+      --shadow: 0 2px 16px 0 rgba(36, 75, 157, 0.18);
+    }
+    body.night header {
+      background: linear-gradient(90deg, #191e2c 65%, #1f3535);
+      color: #fff;
+    }
+    body.night .widget,
+    body.night .ad-section,
+    body.night .refer-box,
+    body.night .notif-box,
+    body.night .pie-section,
+    body.night .modal-content {
+      background: #232e47;
+      color: #f3f6fd;
+      border-color: #29304a;
+      box-shadow: 0 6px 20px 0 rgba(36, 75, 157, 0.17);
+    }
+    body.night th {
+      background: #161b23;
+      color: #7aa7fb;
+      border-bottom: 2px solid #29304a;
+    }
+    body.night td,
+    body.night tr.edit-row { background: #232e47; color: #f3f6fd; }
+    body.night tr:hover td { background: #29304a; }
+    body.night .ad-icon { background: #161b23; color: #7aa7fb;}
+    body.night .btn-details { background: #1c2f48; color: #7aa7fb;}
+    body.night .btn-pause { background: #2a2612; color: #ffb800;}
+    body.night .btn-resume { background: #133a28; color: #3ec97c;}
+    body.night .btn-remove { background: #33191b; color: #fd5a5a;}
+    body.night .btn-edit,
+    body.night .btn-edit-table { background: #1c2f48; color: #7aa7fb;}
+    body.night .modal-save-btn { background: #3ec97c;}
+    body.night .new-ad-fab { background: #7aa7fb; color: #232e47;}
+    body.night .new-ad-fab:hover { background: #3465a3;}
+    body.night .refer-code { background: #29304a; color: #7aa7fb;}
+    body.night .pie-section,
+    body.night .refer-box,
+    body.night .notif-box { background: #1a202e; }
+  
+@media (max-width:600px) {
+  /* Tables scroll horizontally on small screens */
+  .ads-table, .ads-table.pay-table {
+    width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
+  }
+  /* Tighter nav links */
+  header nav a {
+    font-size: 1rem !important;
+    margin-left: 12px !important;
+  }
+  /* Stack header nav items */
+  header nav {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+</style>
+</head>
+<body>
+<header>
+  Ads Manager Dashboard
+  <div class="theme-toggle" onclick="toggleTheme()" title="Toggle day/night mode">
+<span id="theme-label">Night</span>
+<span id="theme-icon"><i data-feather="moon"></i></span>
+</div>
+</header>
+<div class="container">
+<div class="dashboard-widgets" id="dashboardWidgets"></div>
+<div class="main-grid">
+<div class="main-left">
+<div class="ad-section">
+<div class="ad-section-title">Active Ads</div>
+<table class="ads-table" id="activeAdsTable"></table>
+</div>
+<div class="ad-section" id="multiGraphsContainer">
+<div class="ad-section-title">Ad Detailed Performance</div>
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
+<div style="flex:1; min-width:200px;">
+<canvas height="150" id="spentGraph" width="200"></canvas>
+</div>
+<div style="flex:1; min-width:200px;">
+<canvas height="150" id="ctrGraph" width="200"></canvas>
+</div>
+<div style="flex:1; min-width:200px;">
+<canvas height="150" id="clicksGraph" width="200"></canvas>
+</div>
+</div>
+</div>
+<div class="ad-section">
+<div class="ad-section-title">Ad Scheduling</div>
+<table class="ads-table" id="adScheduleTable"></table>
+</div>
+<div class="ad-section">
+<div class="ad-section-title">Budget &amp; Spend</div>
+<table class="ads-table" id="budgetTable"></table>
+</div>
+<div class="ad-section">
+<div class="ad-section-title">Payment History</div>
+<table class="ads-table pay-table" id="paymentTable"></table>
+</div>
+</div>
+<div class="main-right">
+<div class="pie-section">
+<canvas height="120" id="devicePie" width="120"></canvas>
+<div class="legend-list" id="pieLegend"></div>
+</div>
+<div class="ad-section">
+<div class="ad-section-title">Revenue Breakdown (Today)</div>
+<table class="ads-table" id="revBreakTable"></table>
+</div>
+<div class="ad-section">
+<div class="ad-section-title">Ad Performance (Today)</div>
+<table class="ads-table" id="adPerfTable"></table>
+</div>
+<div class="refer-box">
+<div style="font-weight:600; color: var(--primary); margin-bottom: 4px;">Refer &amp; Earn</div>
+<div class="refer-code-row">
+<span class="refer-code" id="referCode">ADSIN1234</span>
+<button class="btn-details" onclick="copyCode()">Copy Code</button>
+</div>
+<div style="font-size:0.99em;">Invite friends and earn <b>5%</b> of their ad revenue for the first 3 months.</div>
+</div>
+<div class="notif-box">
+<div class="notif-title">Recent Notifications</div>
+<ul class="notif-list" id="notifList"></ul>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating New Ad Button -->
+<button class="new-ad-fab" onclick="openModal('newad',-1)" title="Create new ad">
+<i data-feather="plus"></i>
+</button>
+<!-- Modal (Edit, New Ad, Edit Payment, Edit Revenue) -->
+<div class="modal-bg" id="modalBg">
+<div class="modal-content" id="modalContent">
+<button class="close-modal" onclick="closeModal()">×</button>
+<h2 id="modalTitle">Edit Ad</h2>
+<form id="modalForm"></form>
+</div>
+</div>
+<script>
+  // --- Data ---
+  const adIcons = [
+    "monitor", "dollar-sign", "box", "activity", "play-circle", "layers", "bar-chart-2", "award"
+  ];
+  const adData = [
+    {
+      name: "Bharat Club Colour Prediction",
+      desc: "Predict colours, play & win real cash! New ad launched on 9 June 2025.",
+      icon: "bar-chart-2",
+      impressions: 11420, clicks: 360, ctr: 3.15, earnings: 3290, status: "active",
+      actions: ["details", "pause", "remove", "edit"]
+    },
+    {
+      name: "Cash King",
+      desc: "Win real money with every play. Instant cashouts!",
+      icon: "dollar-sign",
+      impressions: 92100, clicks: 5412, ctr: 5.88, earnings: 17500, status: "active",
+      actions: ["details", "pause", "remove", "edit"]
+    },
+    {
+      name: "Treasure Master",
+      desc: "Find treasures, earn big rewards. 100% legal!",
+      icon: "box",
+      impressions: 66800, clicks: 3310, ctr: 4.96, earnings: 12300, status: "paused",
+      actions: ["details", "resume", "remove", "edit"]
+    },
+    {
+      name: "Spin & Win",
+      desc: "Daily spins, daily winnings. Try your luck now.",
+      icon: "activity",
+      impressions: 121000, clicks: 7854, ctr: 6.49, earnings: 21450, status: "active",
+      actions: ["details", "pause", "remove", "edit"]
+    },
+    {
+      name: "Phoenix Game",
+      desc: "Predict, play & win with Phoenix. Trusted by thousands.",
+      icon: "award",
+      impressions: 89999, clicks: 5280, ctr: 5.87, earnings: 13500, status: "active",
+      actions: ["details", "pause", "remove", "edit"]
+    }
+  ];
+  const scheduleData = [
+    {name:"Bharat Club Colour Prediction", days:"Mon-Sun", times:"08:00 - 22:00", status:"Running"},
+    {name:"Cash King", days:"Mon-Fri", times:"09:00 - 20:00", status:"Running"},
+    {name:"Treasure Master", days:"Sat-Sun", times:"10:00 - 18:00", status:"Paused"},
+    {name:"Spin & Win", days:"Mon-Sun", times:"00:00 - 23:59", status:"Running"},
+    {name:"Phoenix Game", days:"Mon-Sun", times:"11:00 - 21:00", status:"Running"}
+  ];
+  const budgetData = [
+    {name:"Bharat Club Colour Prediction", daily:3500, spent:3290, remain:210, strategy:"Maximize Clicks"},
+    {name:"Cash King", daily:18000, spent:17500, remain:500, strategy:"Manual CPC"},
+    {name:"Treasure Master", daily:13000, spent:12300, remain:700, strategy:"Target CPA"},
+    {name:"Spin & Win", daily:22000, spent:21450, remain:550, strategy:"Maximize Conversions"},
+    {name:"Phoenix Game", daily:11000, spent:9700, remain:1300, strategy:"Maximize Clicks"}
+  ];
+  let paymentData = [
+    {date:"2025-06-09", id:"#PAYIN2108912", amt:3290, status:"Paid", method:"UPI (Paytm)", inv:"Download", camp:"Bharat Club Colour Prediction"},
+    {date:"2025-06-09", id:"#PAYIN2108913", amt:17500, status:"Paid", method:"Bank Transfer (SBI)", inv:"Download", camp:"Cash King"},
+    {date:"2025-06-09", id:"#PAYIN2108914", amt:12300, status:"Paid", method:"UPI (Google Pay)", inv:"Download", camp:"Treasure Master"},
+    {date:"2025-06-09", id:"#PAYIN2108915", amt:21450, status:"Paid", method:"Bank Transfer (HDFC)", inv:"Download", camp:"Spin & Win"},
+    {date:"2025-06-09", id:"#PAYIN2108916", amt:13500, status:"Paid", method:"Bank Transfer (ICICI)", inv:"Download", camp:"Phoenix Game"}
+  ];
+  let revenueBreakData = [
+    {source:"Bharat Club Colour Prediction", earn:3290, impr:11420, clk:360, ecpm:288.11},
+    {source:"Cash King", earn:17500, impr:92100, clk:5412, ecpm:190.04},
+    {source:"Treasure Master", earn:12300, impr:66800, clk:3310, ecpm:184.08},
+    {source:"Spin & Win", earn:21450, impr:121000, clk:7854, ecpm:177.36},
+    {source:"Phoenix Game", earn:13500, impr:89999, clk:5280, ecpm:150.01}
+  ];
+  const notifData = [
+    {date:"2025-06-09", msg:"Payment of ₹3,290.00 for Bharat Club Colour Prediction processed via UPI."},
+    {date:"2025-06-09", msg:"High spend alert: Spin & Win spent ₹21,450.00 today."},
+    {date:"2025-06-09", msg:"High clicks: Cash King crossed 5,000 clicks today!"},
+    {date:"2025-06-09", msg:"New payment received for Treasure Master (₹12,300.00)."},
+    {date:"2025-06-09", msg:"All ads delivered above-average performance today."},
+    {date:"2025-06-09", msg:"Phoenix Game reached 5.8% CTR milestone today!"}
+  ];
+  const devicePieData = [
+    {device:"Android", percent:72, color:"#2b4ef6"},
+    {device:"iOS", percent:18, color:"#f2b400"},
+    {device:"Desktop", percent:10, color:"#21c197"}
+  ];
+  let adPerfData = [
+    {name:"Bharat Club Colour Prediction", place:"Homepage Banner", ctr:3.15, dur:"2m 53s", loc:"Mumbai, Pune, Jaipur", split:"Android (78%), iOS (15%), Desktop (7%)"},
+    {name:"Cash King", place:"Footer Banner", ctr:5.88, dur:"2m 12s", loc:"Delhi, Lucknow, Patna", split:"Android (62%), iOS (25%), Desktop (13%)"},
+    {name:"Treasure Master", place:"Sidebar Rectangle", ctr:4.96, dur:"2m 34s", loc:"Bangalore, Pune, Surat", split:"Android (68%), iOS (22%), Desktop (10%)"},
+    {name:"Spin & Win", place:"Top Banner", ctr:6.49, dur:"3m 09s", loc:"Kolkata, Ahmedabad, Vizag", split:"Android (71%), iOS (19%), Desktop (10%)"},
+    {name:"Phoenix Game", place:"Sidebar Rectangle", ctr:5.87, dur:"2m 49s", loc:"Chennai, Bhopal, Indore", split:"Android (75%), iOS (17%), Desktop (8%)"}
+  ];
+
+  // --- Render Functions ---
+  function renderWidgets() {
+    const todayEarnings = adData.reduce((sum, ad) => sum + ad.earnings, 0);
+    const todayClicks = adData.reduce((sum, ad) => sum + ad.clicks, 0);
+    const todayImpr = adData.reduce((sum, ad) => sum + ad.impressions, 0);
+    const thisMonthEarnings = 2182.18 + todayEarnings;
+    const eCPM = (todayEarnings / todayImpr) * 1000;
+    const widgetHtml = [
+      {
+        icon:"bar-chart-2", title:"Today's Earnings", value:`₹${todayEarnings.toLocaleString()}`, change:{val:"+8%", up:true}
+      },
+      {
+        icon:"mouse-pointer", title:"Today's Clicks", value:todayClicks, change:{val:"+11%", up:true}
+      },
+      {
+        icon:"eye", title:"Today's Impressions", value:todayImpr.toLocaleString(), change:{val:"-3%", up:false}
+      },
+      {
+        icon:"trending-up", title:"Total Earnings (This Month)", value:`₹${thisMonthEarnings.toLocaleString()}`, change:{val:"+17%", up:true}
+      },
+      {
+        icon:"percent", title:"eCPM (₹)", value:eCPM.toFixed(2), change:{val:"", up:true}
+      }
+    ].map(w => `
+      <div class="widget">
+        <div class="icon"><i data-feather="${w.icon}"></i></div>
+        <div class="widget-title">${w.title}</div>
+        <div class="widget-value">${w.value}</div>
+        ${w.change.val ? `<div class="widget-change ${w.change.up?'up':'down'}">${w.change.val}</div>` : ""}
+      </div>
+    `).join("");
+    document.getElementById("dashboardWidgets").innerHTML = widgetHtml;
+    feather.replace();
+  }
+  function renderActiveAdsTable() {
+    const ths = [
+      "Ad Preview", "Game Name", "Impressions", "Clicks", "CTR (%)",
+      "Earnings (INR)", "Spent (INR)", "Status", "Ad Actions"
+    ];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    adData.forEach((ad, idx) => {
+      html += `
+      <tr>
+        <td>
+          <div class="ad-preview">
+            <div class="ad-icon"><i data-feather="${ad.icon}"></i></div>
+            <div class="ad-info">
+              <div style="font-weight:600;">${ad.name}</div>
+              <div style="font-size:0.92em; color:#456;">${ad.desc}</div>
+            </div>
+          </div>
+        </td>
+        <td>${ad.name}</td>
+        <td>${ad.impressions.toLocaleString()}</td>
+        <td>${ad.clicks.toLocaleString()}</td>
+        <td>${ad.ctr}</td>
+        <td>₹${ad.earnings.toLocaleString()}</td>
+        <td>₹${budgetData[idx].spent.toLocaleString()}</td>
+        <td>
+          <span class="ad-badge ${ad.status}">
+            ${ad.status.charAt(0).toUpperCase()+ad.status.slice(1)}
+          </span>
+        </td>
+        <td class="ad-actions">
+          ${ad.actions.includes("details") ? `<button class="btn-details">Details</button>` : ""}
+          ${ad.status=="active" ?
+            `<button class="btn-pause" onclick="changeStatus(${idx},'paused')">Pause</button>` :
+           ad.status=="paused" ?
+            `<button class="btn-resume" onclick="changeStatus(${idx},'active')">Resume</button>` :
+            ``}
+          <button class="btn-remove" onclick="removeAd(${idx})">Remove</button>
+          <button class="btn-edit" onclick="openModal('ad',${idx})">Edit</button>
+        </td>
+      </tr>
+      `;
+    });
+    document.getElementById("activeAdsTable").innerHTML = html;
+    feather.replace();
+  }
+  function renderAdScheduleTable() {
+    const ths = ["Ad Name","Active Days","Time Slots","Status"];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    scheduleData.forEach(r=> {
+      html += `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.days}</td>
+          <td>${r.times}</td>
+          <td>
+            <span class="ad-badge ${r.status=='Running'?'active':'paused'}">${r.status}</span>
+          </td>
+        </tr>
+      `;
+    });
+    document.getElementById("adScheduleTable").innerHTML = html;
+  }
+  function renderBudgetTable() {
+    const ths = ["Ad Name","Daily Budget","Spent (Today)","Remaining","Bid Strategy"];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    budgetData.forEach(r=> {
+      html += `
+        <tr>
+          <td>${r.name}</td>
+          <td>₹${r.daily.toLocaleString()}</td>
+          <td>₹${r.spent.toLocaleString()}
+            <span style="display:inline-block;width:100px;height:12px;background:#e4eefd;border-radius:8px;margin-left:7px;">
+              <span style="display:inline-block;height:12px;border-radius:8px;background:var(--primary);width:${Math.min(100,(r.spent/r.daily)*100)}%;"></span>
+            </span>
+          </td>
+          <td>₹${r.remain.toLocaleString()}</td>
+          <td>${r.strategy}</td>
+        </tr>
+      `;
+    });
+    document.getElementById("budgetTable").innerHTML = html;
+  }
+  function renderPaymentTable() {
+    const ths = ["Date","Transaction ID","Amount (INR)","Status","Payment Method","Invoice","Ad Campaign",""];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    paymentData.forEach((r,idx)=> {
+      html += `
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.id}</td>
+          <td>₹${r.amt.toLocaleString()}</td>
+          <td style="color:var(--success); font-weight:600;">${r.status}</td>
+          <td>${r.method}</td>
+          <td><a href="#" style="color:var(--primary);font-weight:600;text-decoration:underline;">${r.inv}</a></td>
+          <td>${r.camp}</td>
+          <td><button class="btn-edit-table" onclick="openModal('pay',${idx})">Edit</button></td>
+        </tr>
+      `;
+    });
+    document.getElementById("paymentTable").innerHTML = html;
+  }
+  function renderNotifList() {
+    let html = notifData.map(n =>
+      `<li><span class="date">${n.date}</span> ${n.msg}</li>`
+    ).join("");
+    document.getElementById("notifList").innerHTML = html;
+  }
+  function renderPieChart() {
+    const ctx = document.getElementById('devicePie').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: devicePieData.map(d=>d.device),
+        datasets: [{
+          data: devicePieData.map(d=>d.percent),
+          backgroundColor: devicePieData.map(d=>d.color),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        },
+        cutout: '60%',
+        aspectRatio: 1,
+        responsive: false
+      }
+    });
+    let legendHtml = devicePieData.map(d =>
+      `<span><span class="legend-dot" style="background:${d.color}"></span>${d.device}</span>`
+    ).join("");
+    document.getElementById("pieLegend").innerHTML = legendHtml;
+  }
+  function renderRevBreakTable() {
+    const ths = ["Source","Earnings (INR)", "Spent (INR)","Impressions","Clicks","eCPM",""];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    revenueBreakData.forEach((r,idx)=> {
+      html += `
+        <tr>
+          <td>${r.source}</td>
+          <td>₹${r.earn.toLocaleString()}</td>
+          <td>${r.impr.toLocaleString()}</td>
+          <td>${r.clk.toLocaleString()}</td>
+          <td>₹${r.ecpm.toFixed(2)}</td>
+          <td><button class="btn-edit-table" onclick="openModal('rev',${idx})">Edit</button></td>
+        </tr>
+      `;
+    });
+    document.getElementById("revBreakTable").innerHTML = html;
+  }
+  function renderAdPerfTable() {
+    const ths = ["Ad Name","Placement","CTR (%)","Avg. Session Duration","Top Locations","Device Split"];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    adPerfData.forEach(r=> {
+      html += `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.place}</td>
+          <td>${r.ctr}</td>
+          <td>${r.dur}</td>
+          <td>${r.loc}</td>
+          <td>${r.split}</td>
+        </tr>
+      `;
+    });
+    document.getElementById("adPerfTable").innerHTML = html;
+  }
+  // --- Modals ---
+  let editingType = null, editingIdx = null;
+  function openModal(type, idx) {
+    editingType = type;
+    editingIdx = idx;
+    let title = '';
+    let form = '';
+    if(type=='ad') {
+      const ad = adData[idx];
+      title = 'Edit Ad';
+      form = `
+        <div class="modal-row">
+          <label>Game Name</label>
+          <input type="text" id="modalGameName" value="${ad.name}" required>
+        </div>
+        <div class="modal-row">
+          <label>Description</label>
+          <textarea id="modalGameDesc" required>${ad.desc}</textarea>
+        </div>
+        <div class="modal-row">
+          <label>Icon</label>
+          <select id="modalIcon">
+            <option value="monitor"${ad.icon=='monitor'?' selected':''}>Monitor</option>
+            <option value="dollar-sign"${ad.icon=='dollar-sign'?' selected':''}>Dollar</option>
+            <option value="box"${ad.icon=='box'?' selected':''}>Box</option>
+            <option value="activity"${ad.icon=='activity'?' selected':''}>Activity</option>
+            <option value="play-circle"${ad.icon=='play-circle'?' selected':''}>Play</option>
+            <option value="layers"${ad.icon=='layers'?' selected':''}>Layers</option>
+            <option value="bar-chart-2"${ad.icon=='bar-chart-2'?' selected':''}>Bar Chart</option>
+            <option value="award"${ad.icon=='award'?' selected':''}>Award</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Status</label>
+          <select id="modalStatus">
+            <option value="active"${ad.status=='active'?' selected':''}>Active</option>
+            <option value="paused"${ad.status=='paused'?' selected':''}>Paused</option>
+            <option value="stopped"${ad.status=='stopped'?' selected':''}>Stopped</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Impressions</label>
+          <input type="number" id="modalImpressions" value="${ad.impressions}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Clicks</label>
+          <input type="number" id="modalClicks" value="${ad.clicks}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>CTR (%)</label>
+          <input type="number" id="modalCTR" value="${ad.ctr}" step="0.01" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Earnings (INR)</label>
+          <input type="number" id="modalEarnings" value="${ad.earnings}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Spent (INR)</label>
+          <input type="number" id="modalSpent" value="${budgetData[idx].spent}" min="0" required>
+        </div>
+        <button class="modal-save-btn" type="submit">Save</button>
+      `;
+    } else if(type=='pay') {
+      const p = paymentData[idx];
+      title = 'Edit Payment';
+      form = `
+        <div class="modal-row">
+          <label>Date</label>
+          <input type="date" id="payDate" value="${p.date}" required>
+        </div>
+        <div class="modal-row">
+          <label>Transaction ID</label>
+          <input type="text" id="payId" value="${p.id}" required>
+        </div>
+        <div class="modal-row">
+          <label>Amount (INR)</label>
+          <input type="number" id="payAmt" value="${p.amt}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Status</label>
+          <select id="payStatus">
+            <option value="Paid"${p.status=='Paid'?' selected':''}>Paid</option>
+            <option value="Pending"${p.status=='Pending'?' selected':''}>Pending</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Payment Method</label>
+          <input type="text" id="payMethod" value="${p.method}" required>
+        </div>
+        <div class="modal-row">
+          <label>Invoice</label>
+          <input type="text" id="payInv" value="${p.inv}" required>
+        </div>
+        <div class="modal-row">
+          <label>Ad Campaign</label>
+          <input type="text" id="payCamp" value="${p.camp}" required>
+        </div>
+        <button class="modal-save-btn" type="submit">Save</button>
+      `;
+    } else if(type=='rev') {
+      const r = revenueBreakData[idx];
+      title = 'Edit Revenue Breakdown';
+      form = `
+        <div class="modal-row">
+          <label>Source</label>
+          <input type="text" id="revSource" value="${r.source}" required>
+        </div>
+        <div class="modal-row">
+          <label>Earnings (INR)</label>
+          <input type="number" id="revEarn" value="${r.earn}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Impressions</label>
+          <input type="number" id="revImpr" value="${r.impr}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Clicks</label>
+          <input type="number" id="revClk" value="${r.clk}" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>eCPM</label>
+          <input type="number" id="revEcpm" value="${r.ecpm}" step="0.01" min="0" required>
+        </div>
+        <button class="modal-save-btn" type="submit">Save</button>
+      `;
+    } else if(type=='newad') {
+      title = 'Create New Ad';
+      form = `
+        <div class="modal-row">
+          <label>Game Name</label>
+          <input type="text" id="modalGameName" required>
+        </div>
+        <div class="modal-row">
+          <label>Description</label>
+          <textarea id="modalGameDesc" required></textarea>
+        </div>
+        <div class="modal-row">
+          <label>Icon</label>
+          <select id="modalIcon">
+            <option value="monitor">Monitor</option>
+            <option value="dollar-sign">Dollar</option>
+            <option value="box">Box</option>
+            <option value="activity">Activity</option>
+            <option value="play-circle">Play</option>
+            <option value="layers">Layers</option>
+            <option value="bar-chart-2">Bar Chart</option>
+            <option value="award">Award</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Status</label>
+          <select id="modalStatus">
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="stopped">Stopped</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Impressions</label>
+          <input type="number" id="modalImpressions" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Clicks</label>
+          <input type="number" id="modalClicks" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>CTR (%)</label>
+          <input type="number" id="modalCTR" step="0.01" min="0" required>
+        </div>
+        <div class="modal-row">
+          <label>Earnings (INR)</label>
+          <input type="number" id="modalEarnings" min="0" required>
+        </div>
+        <button class="modal-save-btn" type="submit">Create</button>
+      `;
+    }
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalForm').innerHTML = form;
+    document.getElementById("modalBg").style.display = "flex";
+    setTimeout(() => feather.replace(), 50);
+  }
+  function closeModal() {
+    editingType = null;
+    editingIdx = null;
+    document.getElementById("modalBg").style.display = "none";
+  }
+  document.getElementById("modalForm").onsubmit = function(e) {
+    e.preventDefault();
+    if(editingType=='ad') {
+      adData[editingIdx].name = document.getElementById("modalGameName").value;
+      adData[editingIdx].desc = document.getElementById("modalGameDesc").value;
+      adData[editingIdx].icon = document.getElementById("modalIcon").value;
+      adData[editingIdx].status = document.getElementById("modalStatus").value;
+      adData[editingIdx].impressions = parseInt(document.getElementById("modalImpressions").value);
+      adData[editingIdx].clicks = parseInt(document.getElementById("modalClicks").value);
+      adData[editingIdx].ctr = parseFloat(document.getElementById("modalCTR").value);
+      adData[editingIdx].earnings = parseInt(document.getElementById("modalEarnings").value);
+      budgetData[editingIdx].spent = parseInt(document.getElementById("modalSpent").value);
+    } else if(editingType=='pay') {
+      paymentData[editingIdx].date = document.getElementById("payDate").value;
+      paymentData[editingIdx].id = document.getElementById("payId").value;
+      paymentData[editingIdx].amt = parseInt(document.getElementById("payAmt").value);
+      paymentData[editingIdx].status = document.getElementById("payStatus").value;
+      paymentData[editingIdx].method = document.getElementById("payMethod").value;
+      paymentData[editingIdx].inv = document.getElementById("payInv").value;
+      paymentData[editingIdx].camp = document.getElementById("payCamp").value;
+    } else if(editingType=='rev') {
+      revenueBreakData[editingIdx].source = document.getElementById("revSource").value;
+      revenueBreakData[editingIdx].earn = parseInt(document.getElementById("revEarn").value);
+      revenueBreakData[editingIdx].impr = parseInt(document.getElementById("revImpr").value);
+      revenueBreakData[editingIdx].clk = parseInt(document.getElementById("revClk").value);
+      revenueBreakData[editingIdx].ecpm = parseFloat(document.getElementById("revEcpm").value);
+    // immediately redraw the revenue table
+            renderRevBreakTable();
+} else if(editingType=='newad') {
+      // Add new ad to adData
+      const name = document.getElementById("modalGameName").value;
+      const desc = document.getElementById("modalGameDesc").value;
+      const icon = document.getElementById("modalIcon").value;
+      const status = document.getElementById("modalStatus").value;
+      const impressions = parseInt(document.getElementById("modalImpressions").value);
+      const clicks = parseInt(document.getElementById("modalClicks").value);
+      const ctr = parseFloat(document.getElementById("modalCTR").value);
+      const earnings = parseInt(document.getElementById("modalEarnings").value);
+      adData.unshift({
+        name, desc, icon, impressions, clicks, ctr, earnings, status,
+        actions: ["details", status=="active"?"pause":"resume", "remove", "edit"]
+      });
+      // Add to payment history:
+      paymentData.unshift({
+        date: new Date().toISOString().slice(0,10),
+        id: "#PAYIN" + (Math.floor(Math.random()*9000000)+1000000),
+        amt: earnings,
+        status: "Paid",
+        method: "UPI (Paytm)",
+        inv: "Download",
+        camp: name
+      });
+      // Add to revenue breakdown
+      revenueBreakData.unshift({
+        source: name,
+        earn: earnings,
+        impr: impressions,
+        clk: clicks,
+        ecpm: (earnings/impressions)*1000
+      });
+      // Add to budget breakdown
+      budgetData.unshift({
+        name: name,
+        daily: earnings,
+        spent: earnings,
+        remain: 0,
+        strategy: "Manual"
+      });
+
+      // Add to ad performance (simple placeholder)
+      adPerfData.unshift({
+        name: name,
+        place: "Homepage Banner",
+        ctr: ctr,
+        dur: "2m 00s",
+        loc: "Mumbai, Pune, Jaipur",
+        split: "Android (80%), iOS (15%), Desktop (5%)"
+      });
+    }
+    closeModal();
+    renderAll();
+  }
+  function changeStatus(idx, status) {
+    adData[idx].status = status;
+    renderAll();
+  }
+  function removeAd(idx) {
+    if (confirm("Remove this ad?")) {
+      adData.splice(idx, 1);
+      renderAll();
+    }
+  }
+  function copyCode() {
+    const code = document.getElementById("referCode").innerText;
+    navigator.clipboard.writeText(code);
+    alert("Copied: " + code);
+  }
+  function renderAll() {
+    renderWidgets();
+    renderActiveAdsTable();
+    renderAdScheduleTable();
+    renderBudgetTable();
+    renderPaymentTable();
+    renderNotifList();
+    renderPieChart();
+    renderRevBreakTable();
+    renderAdPerfTable();
+  }
+  // THEME TOGGLE
+  let isNight = false;
+  function toggleTheme() {
+    isNight = !isNight;
+    document.body.classList.toggle('night', isNight);
+    document.getElementById("theme-label").innerText = isNight ? "Day" : "Night";
+    document.getElementById("theme-icon").innerHTML = isNight ?
+      '<i data-feather="sun"></i>' : '<i data-feather="moon"></i>';
+    feather.replace();
+  }
+  // INIT
+  renderAll();
+  feather.replace();
+</script>
+<!-- Payment Details Modal -->
+<div class="payment-details-bg" id="paymentDetailsBg" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:9999;">
+<div class="payment-details-modal" style="background:#fff; border-radius:8px; padding:20px; position:relative; width:350px;">
+<button onclick="document.getElementById('paymentDetailsBg').style.display='none';" style="position:absolute; right:10px; top:10px; background:none; border:none; font-size:20px;">×</button>
+<h3 id="modalCampaign" style="margin-top:0;"></h3>
+<p><strong>Amount:</strong> <span id="modalAmount"></span></p>
+<p><strong>UTR/Ref No.:</strong> <span id="modalUTR"></span></p>
+<p><strong>Transaction ID:</strong> <span id="modalTxnId"></span></p>
+<p><strong>Payment Method:</strong> <span id="modalMethod"></span></p>
+<p><strong>Status:</strong> <span id="modalStatus"></span></p>
+<p><strong>Date &amp; Time:</strong> <span id="modalDateTime"></span></p>
+<p><strong>Invoice:</strong> <a href="#" id="modalInvoice">Download</a></p>
+</div>
+</div>
+<script>
+function showPaymentDetails(idx) {
+  const paymentData = [
+    {"campaign":"Bharat Club Colour Prediction","amount":"₹3,290","utr":"213813974120","txnId":"#PAYIN2108912","method":"UPI (Paytm)","status":"Paid","datetime":"2025-06-09 11:05:18","invoice":"#"},
+    {"campaign":"Cash King","amount":"₹17,500","utr":"212913222221","txnId":"#PAYIN2108913","method":"Bank Transfer (SBI)","status":"Paid","datetime":"2025-06-09 11:07:23","invoice":"#"},
+    {"campaign":"Treasure Master","amount":"₹12,300","utr":"213313333444","txnId":"#PAYIN2108914","method":"UPI (Google Pay)","status":"Paid","datetime":"2025-06-09 11:10:49","invoice":"#"},
+    {"campaign":"Spin & Win","amount":"₹21,450","utr":"210891213999","txnId":"#PAYIN2108915","method":"Bank Transfer (HDFC)","status":"Paid","datetime":"2025-06-09 11:15:28","invoice":"#"},
+    {"campaign":"Phoenix Game","amount":"₹13,500","utr":"212313889221","txnId":"#PAYIN2108916","method":"Bank Transfer (ICICI)","status":"Paid","datetime":"2025-06-09 11:20:17","invoice":"#"}
+  ];
+  const p = paymentData[idx];
+  document.getElementById('modalCampaign').innerText = p.campaign;
+  document.getElementById('modalAmount').innerText = p.amount;
+  document.getElementById('modalUTR').innerText = p.utr;
+  document.getElementById('modalTxnId').innerText = p.txnId;
+  document.getElementById('modalMethod').innerText = p.method;
+  document.getElementById('modalStatus').innerText = p.status;
+  document.getElementById('modalDateTime').innerText = p.datetime;
+  document.getElementById('modalInvoice').href = p.invoice;
+  document.getElementById('paymentDetailsBg').style.display = 'flex';
+}
+
+// Inject 'View Details' buttons into payment table rows
+document.addEventListener('DOMContentLoaded', ()=>{
+  const paymentTable = document.getElementById('paymentTable');
+  if(paymentTable) {
+    [...paymentTable.rows].forEach((row, idx)=>{
+      if(idx > 0) { // skip header
+        const cell = row.insertCell(-1);
+        cell.innerHTML = `<button onclick="showPaymentDetails(${idx-1})" style="padding:5px 10px; background:#2b4ef6; color:#fff; border:none; border-radius:5px; cursor:pointer;">View Details</button>`;
+      } else {
+        row.insertCell(-1).innerText = 'Details';
+      }
+    });
+  }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const storageKey = 'dashboardData';
+
+  function saveData() {
+    localStorage.setItem(storageKey, JSON.stringify({ adData, paymentData, budgetData, revenueBreakData, adPerfData }));
+  }
+
+  function loadData() {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data.adData) adData = data.adData;
+      if (data.paymentData) paymentData = data.paymentData;
+      if (data.budgetData) budgetData = data.budgetData;
+      if (data.revenueBreakData) revenueBreakData = data.revenueBreakData;
+      if (data.adPerfData) adPerfData = data.adPerfData;
+    }
+  }
+
+  function renderAll() {
+    renderWidgets();
+    renderActiveAdsTable();
+    renderAdScheduleTable();
+    renderBudgetTable();
+    renderPaymentTable();
+    renderNotifList();
+    renderPieChart();
+    renderRevBreakTable();
+    renderAdPerfTable();
+  }
+
+  loadData();
+  renderAll();
+
+  // Ensure View Details buttons always render
+  function renderPaymentTable() {
+    const ths = ["Date","Transaction ID","Amount (INR)","Status","Payment Method","Invoice","Ad Campaign","Details"];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    paymentData.forEach((r,idx)=> {
+      html += `
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.id}</td>
+          <td>₹${r.amt.toLocaleString()}</td>
+          <td style="color:var(--success); font-weight:600;">${r.status}</td>
+          <td>${r.method}</td>
+          <td><a href="#" style="color:var(--primary);font-weight:600;text-decoration:underline;">${r.inv}</a></td>
+          <td>${r.camp}</td>
+          <td><button onclick="showPaymentDetails(${idx})" style="padding:5px 10px; background:#2b4ef6; color:#fff; border:none; border-radius:5px; cursor:pointer;">View Details</button></td>
+        </tr>
+      `;
+    });
+    document.getElementById("paymentTable").innerHTML = html;
+  }
+
+  window.renderPaymentTable = renderPaymentTable; // Ensure globally available
+
+  const origOpenModal = window.openModal;
+  window.openModal = function(type, idx) {
+    origOpenModal(type, idx);
+    setTimeout(renderPaymentTable, 500);
+  }
+
+  const origCloseModal = window.closeModal;
+  window.closeModal = function() {
+    origCloseModal();
+    setTimeout(() => {
+      saveData();
+      renderAll();
+    }, 500);
+  }
+
+  const origRemoveAd = window.removeAd;
+  window.removeAd = function(idx) {
+    origRemoveAd(idx);
+    saveData();
+    renderAll();
+  }
+
+  const origChangeStatus = window.changeStatus;
+  window.changeStatus = function(idx, status) {
+    origChangeStatus(idx, status);
+    saveData();
+    renderAll();
+  }
+
+  document.querySelector('.new-ad-fab').onclick = function() {
+    origOpenModal('newad', -1);
+  }
+
+  document.getElementById("modalForm").onsubmit = function(e) {
+    e.preventDefault();
+    if(editingType=='newad') {
+      const name = document.getElementById("modalGameName").value;
+      const earnings = parseInt(document.getElementById("modalEarnings").value);
+      paymentData.unshift({
+        date: new Date().toISOString().slice(0,10),
+        id: "#PAYIN" + (Math.floor(Math.random()*9000000)+1000000),
+        amt: earnings,
+        status: "Paid",
+        method: "UPI (Paytm)",
+        inv: "Download",
+        camp: name
+      });
+    }
+    saveData();
+    closeModal();
+    renderAll();
+  }
+});
+</script>
+<script>
+function renderPaymentTable() {
+    const ths = ["Date","Transaction ID","Amount (INR)","Status","Payment Method","Invoice","Ad Campaign","Details"];
+    let html = `<tr>${ths.map(h=>`<th>${h}</th>`).join("")}</tr>`;
+    paymentData.forEach((r,idx)=> {
+      html += `
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.id}</td>
+          <td>₹${r.amt.toLocaleString()}</td>
+          <td style="color:var(--success); font-weight:600;">${r.status}</td>
+          <td>${r.method}</td>
+          <td><a href="#" style="color:var(--primary);font-weight:600;text-decoration:underline;">${r.inv}</a></td>
+          <td>${r.camp}</td>
+          <td><button onclick="showPaymentDetails(${idx})" style="padding:5px 10px; background:#2b4ef6; color:#fff; border:none; border-radius:5px; cursor:pointer;">View Details</button></td>
+        </tr>
+      `;
+    });
+    document.getElementById("paymentTable").innerHTML = html;
+}
+window.renderPaymentTable = renderPaymentTable; 
+</script>
+
+
+<script>
+function renderGraph(canvasId, label, data, color) {
+  const canvasElem = document.getElementById(canvasId);
+  canvasElem.width = canvasElem.parentElement.offsetWidth;
+  canvasElem.height = 150;
+
+  const ctx = canvasElem.getContext('2d');
+  if(window[canvasId+'Chart']) {
+    window[canvasId+'Chart'].destroy();
+  }
+
+  window[canvasId+'Chart'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [{
+        label: label,
+        data: data,
+        borderColor: color,
+        backgroundColor: color+'33',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: true,
+      scales: { y: { beginAtZero: true }},
+      plugins: { legend: { display: true, position: 'bottom' }}
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  function bindDetailsButtons() {
+    document.querySelectorAll('.btn-details').forEach((btn, idx) => {
+      btn.onclick = () => updateMultiGraphs(idx);
+    });
+  }
+
+  window.updateMultiGraphs = function(idx) {
+    const ad = adData[idx];
+    const dailySpent = Array.from({length: 7}, () => (ad.earnings + Math.random() * 500 - 250).toFixed(2));
+    const dailyCTR = Array.from({length: 7}, () => (ad.ctr + Math.random()*0.4 - 0.2).toFixed(2));
+    const dailyClicks = Array.from({length: 7}, () => Math.floor(ad.clicks*(0.8 + Math.random()*0.4)));
+
+    renderGraph('spentGraph', 'Spent (INR)', dailySpent, '#f2b400');
+    renderGraph('ctrGraph', 'CTR (%)', dailyCTR, '#2b4ef6');
+    renderGraph('clicksGraph', 'Clicks', dailyClicks, '#21c197');
+  };
+
+  const originalRenderActiveAdsTable = window.renderActiveAdsTable;
+  window.renderActiveAdsTable = function() {
+    originalRenderActiveAdsTable();
+    bindDetailsButtons();
+  };
+
+  bindDetailsButtons();
+});
+</script>
+</body>
+</html>
